@@ -25,6 +25,77 @@ Process exit status alone is **not** a soundness argument. Production use must p
 
 ---
 
+## Installation prerequisites
+
+### Required
+
+| Requirement | Notes |
+|-------------|--------|
+| **OCaml ≥ 4.14** | Tested against 4.14.x; 5.x should work if `bls12-381-unix` supports your switch |
+| **Dune ≥ 3.10** | From the system package manager or `opam install dune` |
+| **opam 2.x** | Needed for dependency resolution outside pure Nix builds |
+| **bls12-381-unix ≥ 6.0.0** | Pulls in the blst C library; first install can take several minutes |
+| **alcotest** | Test-only dependency (`opam install alcotest`) |
+
+On Debian/Ubuntu before opam:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y build-essential m4 pkg-config libgmp-dev opam
+```
+
+On macOS (Homebrew):
+
+```bash
+brew install opam gmp pkg-config
+```
+
+Then:
+
+```bash
+opam init -y
+opam switch create snapkitty 4.14.1   # or another ≥ 4.14
+eval $(opam env)
+```
+
+### Optional (native proof tools)
+
+Bridges degrade to `unknown` / `unsupported` when a tool is missing; the OCaml library still builds.
+
+| Tool | Used by | Typical install |
+|------|---------|-----------------|
+| **ACL2** | `Acl2.Bridge` | Distro package or [acl2.org](https://www.acl2.org) build |
+| **Coq / Rocq** (`coqc` or `rocq`) | `Rocq.Bridge` | `opam install coq` or Nix `coq` |
+| **Cryptol** | `Cryptol.Bridge` | [Galois Cryptol releases](https://github.com/GaloisInc/cryptol) or Nix |
+| **SAW** | `Saw.Bridge` | [Galois SAW](https://github.com/GaloisInc/saw-script) or Nix |
+| **clang / LLVM** | Future SAW bitcode proofs against `fixtures/xor.c` | System LLVM packages |
+
+Environment overrides (optional):
+
+```bash
+export ROCQ=coqc          # or path to rocq
+export CRYPTOL=cryptol
+export SAW=saw
+export BLST_VERIFICATION_DIR=/path/to/reviewed/blst-verification
+```
+
+### Nix
+
+If you use the flake, the dev shell aims to provide OCaml, dune, Coq, Cryptol, and SAW when those packages exist on your `nixpkgs` channel. Pin with:
+
+```bash
+nix flake lock
+nix develop
+```
+
+Internet access is required the first time for `nix flake lock` / `opam update`.
+
+### Disk / time
+
+- Cold `opam install bls12-381-unix` can take 5–15 minutes (C + OCaml bindings).
+- Full `nix develop` on a clean machine may download several hundred MB of store paths.
+
+
 ## Concrete build examples
 
 ### 1. Nix flake (recommended)
