@@ -1,0 +1,6 @@
+module snapkitty_invariants where
+
+add_zero : [32] -> [32]
+add_zero x = x + 0
+
+property add_zero_is_id x = add_zero x == x

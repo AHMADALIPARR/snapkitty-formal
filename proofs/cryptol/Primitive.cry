@@ -1,0 +1,8 @@
+module Primitive where
+
+// Small bit-level specification used as an integration smoke test.
+xorBit : Bit -> Bit -> Bit
+xorBit x y = x ^ y
+
+property xor_zero_right : [x] -> xorBit x False == x
+property xor_commutative : [x y] -> xorBit x y == xorBit y x

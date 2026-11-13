@@ -1,0 +1,20 @@
+opam-version: "2.0"
+synopsis: "Formal verification stack for snapkitty (ACL2, Rocq, Cryptol, SAW, BLST)"
+maintainer: "you@example.com"
+authors: "you"
+license: "AGPL-3.0-or-later"
+homepage: "https://github.com/your/snapkitty-formal"
+bug-reports: "https://github.com/your/snapkitty-formal/issues"
+depends: [
+  "ocaml" {>= "4.14"}
+  "dune" {>= "3.10"}
+  "bls12-381-unix" {>= "6.0.0"}
+  "alcotest" {with-test}
+  "odoc" {with-doc}
+]
+build: [
+  ["dune" "subst"] {dev}
+  ["dune" "build" "-p" name "-j" jobs]
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test}
+]
+dev-repo: "git+https://github.com/your/snapkitty-formal.git"

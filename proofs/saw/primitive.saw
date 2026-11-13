@@ -1,0 +1,4 @@
+// SAW installation smoke test only. This does not claim an implementation
+// equivalence proof. A full proof must import compiled LLVM bitcode and
+// compare the target function against the Cryptol specification.
+print "SnapKitty SAW adapter loaded.";

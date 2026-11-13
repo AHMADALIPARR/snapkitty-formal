@@ -1,0 +1,6 @@
+// SAW script: load Cryptol spec, verify an LLVM implementation.
+// cryptol_load "proofs/cryptol/invariants.cry";
+// llvm_load_module "artifacts/impl.bc";
+// llvm_verify m "snapkitty_add_zero" [] true
+// (cryptol_ss ()) (do { llvm_execute_func [llvm_term {{ x : [32] }}]; llvm_return (llvm_term {{ add_zero x }}) });
+print "SnapKitty SAW verify skeleton loaded.";

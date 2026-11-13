@@ -1,0 +1,6 @@
+(test
+ (name test_snapkitty)
+ (libraries snapkitty-formal alcotest)
+ (deps
+  (glob_files_rec ../proofs/*)
+  (glob_files_rec ../fixtures/*)))

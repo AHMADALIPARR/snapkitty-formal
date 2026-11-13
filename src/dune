@@ -1,0 +1,6 @@
+(include_subdirs qualified)
+
+(library
+ (name snapkitty_formal)
+ (public_name snapkitty-formal)
+ (libraries unix bls12-381-unix))
