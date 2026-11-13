@@ -23,23 +23,158 @@ Process exit status alone is **not** a soundness argument. Production use must p
 | `unknown`     | Executable or proof input missing, or process could not start. |
 | `unsupported` | Required external integration (e.g. `BLST_VERIFICATION_DIR`) not configured. |
 
-## Quick start
+---
+
+## Concrete build examples
+
+### 1. Nix flake (recommended)
 
 ```bash
+# Clone and enter the project
+git clone https://github.com/AHMADALIPARR/snapkitty-formal.git
+cd snapkitty-formal
+
+# Pin the dependency graph (commit the resulting flake.lock)
 nix flake lock
+
+# Enter the dev shell (OCaml, dune, SAW, Cryptol, Coq, …)
 nix develop
-dune build
-dune runtest
+
+# Inside the shell:
+dune build          # build the library
+dune runtest        # run Alcotest suite
+dune build @doc     # optional: odoc (if odoc is in the switch)
+
+# Build the package derivation from outside the shell
 nix build
+./result/bin/…      # if the package exposes executables later
 ```
 
-Without Nix (opam switch with OCaml ≥ 4.14):
+### 2. Plain opam + dune (no Nix)
 
 ```bash
+# Requires OCaml ≥ 4.14 and opam 2.x
+opam switch create snapkitty 4.14.1   # or use an existing switch
+eval $(opam env)
+
+# Install project dependencies from the local .opam file
 opam install . --deps-only -y
+# If bls12-381-unix is slow to build the first time, that is expected.
+
 dune build
 dune runtest
 ```
+
+### 3. One-shot clean rebuild
+
+```bash
+dune clean
+dune build -p snapkitty-formal -j $(nproc)
+dune runtest -p snapkitty-formal
+```
+
+### 4. Interactive utop session
+
+```bash
+dune utop src
+```
+
+Then in utop:
+
+```ocaml
+open Snapkitty_formal;;
+
+(* Core logic *)
+Core.Logic.is_tautology
+  (Core.Logic.Imp (Core.Logic.Atom "x", Core.Logic.Atom "x"));;
+(* - : bool = true *)
+
+(* BLST sanity *)
+Blst.Bridge.pairing_sanity ();;
+(* - : bool = true *)
+
+(* Substrate: how many backends are registered? *)
+List.length Substrate.Capability.all_backends;;
+(* - : int = 4 *)
+
+(* Dispatch a trivial defthm through LGRD *)
+let form =
+  Substrate.Syntax.Defthm {
+    dt_name = "id_prop";
+    dt_statement = Substrate.Syntax.List [
+      Substrate.Syntax.Atom "implies";
+      Substrate.Syntax.Atom "P";
+      Substrate.Syntax.Atom "P";
+    ];
+    dt_hint = None;
+  } in
+Substrate.Compile.compile_form form;;
+```
+
+### 5. Drive native proof tools via bridges
+
+From the project root (tools must be on `PATH`, or set `ROCQ` / `CRYPTOL` / `SAW`):
+
+```bash
+# After: dune build
+dune exec -- ocaml <<'OCAML'
+  #use "topfind";;
+  #require "snapkitty-formal";;
+  open Snapkitty_formal;;
+
+  let (st, out, err) = Acl2.Bridge.verify_core ~root:"." () in
+  Printf.printf "ACL2: %s\n%s%s\n"
+    (Acl2.Bridge.status_to_string st) out err;;
+
+  let (st, out, err) = Rocq.Bridge.verify_core ~root:"." () in
+  Printf.printf "Rocq: %s\n%s%s\n"
+    (Rocq.Bridge.status_to_string st) out err;;
+
+  let (st, out, err) = Cryptol.Bridge.verify_core ~root:"." () in
+  Printf.printf "Cryptol: %s\n%s%s\n"
+    (Cryptol.Bridge.status_to_string st) out err;;
+
+  let (st, out, err) = Saw.Bridge.verify_core ~root:"." () in
+  Printf.printf "SAW: %s\n%s%s\n"
+    (Saw.Bridge.status_to_string st) out err;;
+OCAML
+```
+
+Or call the same APIs from a small `bin/` executable / test once you add one.
+
+### 6. BLST external verification check
+
+```bash
+# Unset → Unsupported
+unset BLST_VERIFICATION_DIR
+dune utop src
+# Blst.Bridge.check_external_verification ();;
+
+# Point at a reviewed upstream checkout → Proved (config check only)
+export BLST_VERIFICATION_DIR=/path/to/blst-verification
+# Blst.Bridge.check_external_verification ();;
+```
+
+See `integrations/blst/README.md` — this adapter only checks that the directory exists; it does not claim a cryptographic proof of BLST.
+
+### 7. Run a single Alcotest case
+
+```bash
+dune runtest --test-case "tautology"
+dune runtest --test-case "pairing sanity"
+```
+
+### 8. Typical first-time failure modes
+
+| Symptom | Fix |
+|---------|-----|
+| `bls12-381-unix` not found | `opam install bls12-381-unix` or use `nix develop` |
+| `coqc: command not found` | Install Coq / Rocq, or rely on Nix `formalTools` |
+| `cryptol` / `saw` missing | Same — Nix shell provides them when available in the channel |
+| Tests fail on proof-file paths | Run tests from the **repo root** so `proofs/` resolves |
+| `ACL2 bridge` Unknown | Install `acl2` or use the batch script only when the binary is present |
+
+---
 
 ## Repository layout
 
