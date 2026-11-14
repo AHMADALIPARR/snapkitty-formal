@@ -1,0 +1,13 @@
+import "proofs/cryptol/Clmul.cry";
+
+m <- llvm_load_module "artifacts/clmul_shim.bc";
+
+let hs_clmul64_spec = do {
+    a <- llvm_fresh_var "a" (llvm_int 64);
+    b <- llvm_fresh_var "b" (llvm_int 64);
+    llvm_execute_func [llvm_term a, llvm_term b];
+    llvm_return (llvm_term {{ clmul64 a b }});
+};
+
+hs_clmul64_verified <- llvm_verify m "hs_clmul64" [] true hs_clmul64_spec abc;
+print "clmul64 verification attempted.";

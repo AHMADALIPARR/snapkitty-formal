@@ -1,0 +1,16 @@
+module Clmul where
+
+clmul64 : [64] -> [64] -> [64]
+clmul64 a b = partials @ 64
+  where
+    partials : [65][64]
+    partials =
+      [0] #
+      [ partials @ i ^
+          (if ((b >> i) && 1) == 1
+           then a << i
+           else 0)
+      | i <- [0 .. 63]
+      ]
+
+primitive clmul64_prim : [64] -> [64] -> [64]

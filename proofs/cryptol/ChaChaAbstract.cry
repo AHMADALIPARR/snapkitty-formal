@@ -1,0 +1,21 @@
+module ChaChaAbstract where
+
+primitive quarter_round : [4][32] -> [4][32]
+
+round_indices : [8][4][8]
+round_indices =
+  [ [ 0,  4,  8, 12]
+  , [ 1,  5,  9, 13]
+  , [ 2,  6, 10, 14]
+  , [ 3,  7, 11, 15]
+  , [ 0,  5, 10, 15]
+  , [ 1,  6, 11, 12]
+  , [ 2,  7,  8, 13]
+  , [ 3,  4,  9, 14]
+  ]
+
+apply_qr : [16][32] -> [4][8] -> [16][32]
+apply_qr mat idxs = updates mat idxs (quarter_round (mat @ idxs))
+
+double_round : [16][32] -> [16][32]
+double_round mat = foldl apply_qr mat round_indices

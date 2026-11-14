@@ -1,0 +1,24 @@
+import "proofs/cryptol/ChaChaDoubleRound.cry";
+
+m <- llvm_load_module "artifacts/chacha_double_round.bc";
+
+let quarter_round_spec = do {
+    state <- llvm_fresh_var "state" (llvm_array 4 (llvm_int 32));
+    state_ptr <- llvm_alloc (llvm_array 4 (llvm_int 32));
+    llvm_points_to state_ptr (llvm_term state);
+    llvm_execute_func [state_ptr];
+    llvm_points_to state_ptr (llvm_term {{ quarter_round state }});
+};
+
+round_ov <- llvm_verify m "quarter_round" [] false quarter_round_spec z3;
+
+let double_round_spec = do {
+    matrix <- llvm_fresh_var "matrix" (llvm_array 16 (llvm_int 32));
+    matrix_ptr <- llvm_alloc (llvm_array 16 (llvm_int 32));
+    llvm_points_to matrix_ptr (llvm_term matrix);
+    llvm_execute_func [matrix_ptr];
+    llvm_points_to matrix_ptr (llvm_term {{ double_round matrix }});
+};
+
+double_round_ov <- llvm_verify m "double_round" [round_ov] false double_round_spec z3;
+print "Stage 2: double_round compositional verification attempted.";

@@ -1,0 +1,14 @@
+import "proofs/cryptol/ARXRound.cry";
+
+m <- llvm_load_module "artifacts/arx_round.bc";
+
+let quarter_round_spec = do {
+    state <- llvm_fresh_var "state" (llvm_array 4 (llvm_int 32));
+    state_ptr <- llvm_alloc (llvm_array 4 (llvm_int 32));
+    llvm_points_to state_ptr (llvm_term state);
+    llvm_execute_func [state_ptr];
+    llvm_points_to state_ptr (llvm_term {{ quarter_round state }});
+};
+
+round_ov <- llvm_verify m "quarter_round" [] false quarter_round_spec z3;
+print "Stage 1: quarter_round verified (or attempted).";
