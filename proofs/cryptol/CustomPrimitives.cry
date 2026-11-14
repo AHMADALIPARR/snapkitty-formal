@@ -1,0 +1,21 @@
+module CustomPrimitives where
+
+primitive customUnary : [32] -> [32]
+primitive customBinary : [32] -> [32] -> [32]
+primitive customStep : [256] -> [128] -> ([256], [128])
+
+applyTwice : [32] -> [32]
+applyTwice x = customUnary (customUnary x)
+
+type Key   = [256]
+type Tweak = [128]
+type Block = [128]
+
+primitive encrypt : Key -> Tweak -> Block -> Block
+primitive decrypt : Key -> Tweak -> Block -> Block
+
+decryptEncrypt : Key -> Tweak -> Block -> Bit
+decryptEncrypt k t m = decrypt k t (encrypt k t m) == m
+
+unaryInvolution : [32] -> Bit
+unaryInvolution x = customUnary (customUnary x) == x

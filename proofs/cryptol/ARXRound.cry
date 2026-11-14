@@ -1,0 +1,28 @@
+module ARXRound where
+
+quarter_round : [4][32] -> [4][32]
+quarter_round [s0, s1, s2, s3] = [s0_2, s1_2, s2_2, s3_2]
+  where
+    s0_1 = s0 + s1
+    s3_1 = (s3 ^ s0_1) <<< 16
+    s2_1 = s2 + s3_1
+    s1_1 = (s1 ^ s2_1) <<< 12
+    s0_2 = s0_1 + s1_1
+    s3_2 = (s3_1 ^ s0_2) <<< 8
+    s2_2 = s2_1 + s3_2
+    s1_2 = (s1_1 ^ s2_2) <<< 7
+
+quarter_round_inv : [4][32] -> [4][32]
+quarter_round_inv [s0_2, s1_2, s2_2, s3_2] = [s0, s1, s2, s3]
+  where
+    s1_1 = (s1_2 >>> 7) ^ s2_2
+    s2_1 = s2_2 - s3_2
+    s3_1 = (s3_2 >>> 8) ^ s0_2
+    s0_1 = s0_2 - s1_1
+    s1   = (s1_1 >>> 12) ^ s2_1
+    s2   = s2_1 - s3_1
+    s3   = (s3_1 >>> 16) ^ s0_1
+    s0   = s0_1 - s1
+
+qr_left_inv_prop : [4][32] -> Bit
+qr_left_inv_prop s = quarter_round_inv (quarter_round s) == s
